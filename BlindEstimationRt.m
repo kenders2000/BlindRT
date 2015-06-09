@@ -72,22 +72,12 @@ for Fci=5%:8
     
 end
 
-%  save Bedford_Bay1_06_00_10_00.matlesson
-%%
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all
-close all
-
-
-%%load('\\D6hrk04j\shareddocs\PK\schools_BMLERT\bDS_English_E8_L5resamp.wavfc1000.mat')
-
-% break
-%%
+%% compute RT for room
 % choose Length of segments
-segLen=5*60;  %% five mins (in secs)
+segLen=3*60;  %% three mins (in secs)
 
-for Fci=5
+for Fci=1:8
     
     Fs2=Fs3(Fci);
     segLenN=segLen*Fs2;
@@ -106,9 +96,10 @@ for Fci=5
     
     % find all decay phases with DR better than 25dB
     III_=find(DR1<-25);
-    %%        
+    %%      
+    clear T25_sec
     channel_store_sec=zeros(Nseg,4*Fs3(Fci));
-        channel_fil=zeros(3*Fs2,1);
+        channel_fil=zeros(5*Fs2,1);
     for segi=1:Nseg
         
         posN_from=(segi-1)*segLenN+1;
@@ -121,7 +112,7 @@ for Fci=5
 
         
         [channel_sec]=optimum_model_function_2(a_store1(III),b_store1(III),alpha_store1(III),Fs2,DR1(III),channel_fil,0);
-        
+        channel_sec3=channel_sec;
         %     Find -30dB point
         channel_sec_log=10*log10(channel_sec.^2);
         % [mm Iend]=min(abs(channel_sec_log-(-25)));
@@ -148,70 +139,41 @@ for Fci=5
         c = pinv(A)*sig;
         line=(channel_sec_log(I2))+c(2)*((1:length(channel_sec))-I2);
         line=10.^(line(:)/20);
-        % plot(20*log10(line))
-        
-        plot(channel_sec_log,'r')
-        hold on
-        winL=500;
-        channel_sec2(I2:end)=line(I2:end)';
-        plot(20*log10(channel_sec2),'k')
-        channel_sec=channel_sec2;
-        
-        
-        
-        [T25_sec(Fci,segi) EDT_sec(Fci,segi) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_sec,Fs2,25);
-        channel_store_sec(segi,1:length(channel_sec))=channel_sec;
-        
-        % [T25_sec(sec) EDT_sec(sec) C80 C50 centre D ]
-        
-        %              N=6*Fs2;
-        %             channel_est=(alpha_store1(III(i))*a_store1(III(i)).^(0:(N-1))+(1-alpha_store1(III(i)))*b_store1(III(i)).^(0:(N-1)));
-        %             clear Y
-        
-        Y(length(channel_sec):-1:1) = cumsum(channel_sec(length(channel_sec):-1:1).^2);
+%       plot(20*log10(line))
+%       plot(channel_sec_log,'r')
+%       hold on
+%       winL=500;
+%       channel_sec2(I2:end)=line(I2:end)';
+%       plot(20*log10(channel_sec2),'k')
+%       channel_sec=channel_sec2;
+
+        [T25_sec(segi) EDT_sec(Fci,segi) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_sec3,Fs2,25);
+        channel_store_sec(segi,1:length(channel_sec3))=channel_sec3;
+        Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
         Y=Y/max(abs(Y));
         Y_s(segi,1:length(Y))=Y;
-        
-        %
-        % %             DR(ii)=Y_log(length(y_re));
-        %             [T25_e(i) EDT_e(i) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_est,Fs2,25);
-        %
-        
-        
+
     end
+    T25_sec_cell{Fci}=T25_sec;
     %%
     t=((1:length(Y_s))-1)/Fs2;
-    figure
+%     figure
     plot(t,10*log10(Y_s'))
     ylim([-35 0])
     channel_final=median(channel_store_sec);
-    % impulse_esti(Fci,:)=median(channel_store_sec);
+    hold on
+        t=((1:length(channel_final))-1)/Fs2;
+
+    plot(t,20*log10(channel_final'),'linewidth',2)
     impulse_est_cell{Fci}=median(channel_store_sec);
-    %  for i=1:5
-    % %     impulse_est_cell{i}=impulse_esti(i,:);
-    % Y_logs_cell{i}=Y_logs(i,:,1:2);
-    % Y_log_cell{i}=Y_log(i,:);
-    %  end
+
     
-    %  [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
-    % [channel_final]=optimum_model_function_2(a_store1(III(:)),b_store1(III(:)),alpha_store1(III(:)),Fs2,DR1(III(:)),channel_fil,1)
-    [T25_e(Fci) EDT_e(Fci) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_final,Fs2,25);
-    % close all
-    % [T25_e EDT_e C80 C50 centre D ]=Room_acoustic_params_centre_ldr_plot(channel_final,Fs2,25);
-    % uiopen('C:\Documents and Settings\AGS056\My Documents\Thesis\schools_recordings\impulse_english.wav',1)
-    %  %%
-    % for Fci=5
-    %
-    % wc=[Fcm(Fci)/sqrt(2) (Fcm(Fci)/sqrt(2))*2]/(Fs2/2);
-    % %         wc=[Fc/(10^0.05) Fc*(10^0.05)]/(Fs2/2);
-    % %     1000*10^0.05
-    % Nf=5
-    %     [B1,A1] = butter(Nf,wc);
-    %     dataf=filtfilt(B1,A1,data);
-    % [mm datafI]=max(abs(dataf));
-    % dataf=dataf(datafI:end);
-    % [T25_i(Fci) EDT_i(Fci) C80i C50i centrei Di ]=Room_acoustic_params_centre_ldr_plot(dataf',fs,15);
-    % end
-    
-    
+%     [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
+%      [channel_final]=optimum_model_function_2(a_store1(III(:)),b_store1(III(:)),alpha_store1(III(:)),Fs2,DR1(III(:)),channel_fil,1)
+    [T25_e_decaycurve(Fci) EDT_e(Fci) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_final,Fs2,25);
+
+   T25_e(Fci) = mean(T25_sec(:));
+   T25_cl(Fci) = std(T25_sec(:))/sqrt(length(T25_sec))*1.96;
+   T25_N(Fci)=length(T25_sec);
+   std(T25_sec(:))/sqrt(length(T25_sec))*1.96;
 end
