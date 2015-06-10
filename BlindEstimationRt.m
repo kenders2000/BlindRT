@@ -54,7 +54,7 @@ Fs3=[3000 3000 3000 3000 3000 6000 12000 24000];
 filename=sprintf('originals/DS_Science_S6_L1.WAV');
 SIZ=wavread(filename,'size');
 
-for Fci=1:8
+for Fci=6:8
     
     % clear Maximum likelihood parameters
     a_store1=[];
@@ -120,7 +120,7 @@ end
 segLen=3*60;  %% three mins (in secs)
 
 clear fittedresults
-for Fci=1:5
+for Fci=6
     
     Fs2=Fs3(Fci);
     segLenN=segLen*Fs2;
@@ -140,7 +140,7 @@ for Fci=1:5
     % find all decay phases with DR better than 25dB
     III_=find(DR1<-25);
     %%      
-    clear T25_sec NdecayPhases Y_s
+    clear T25_sec NdecayPhases Y_s 
     channel_store_sec=zeros(Nseg,4*Fs3(Fci));
     channel_fil=zeros(5*Fs2,1);
     for segi=1:Nseg
@@ -197,9 +197,9 @@ for Fci=1:5
             T25_sec(segi)=nan;
         end
         
-        %         Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
-        %         Y=Y/max(abs(Y));
-        %         Y_s(segi,1:length(Y))=Y;
+         Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
+         Y=Y/max(abs(Y));
+         Y_s(segi,1:length(Y))=Y;
         NdecayPhases(segi)=length(III);
     end
     
@@ -214,20 +214,21 @@ for Fci=1:5
     fittedresults{Fci}.T25_sec=T25_sec;
     fittedresults{Fci}.NdecayPhases=NdecayPhases;
     
-    %     t=((1:length(Y_s))-1)/Fs2;
-    %     figure
-    %     plot(t,10*log10(Y_s'))
-    %     ylim([-35 0])
-    %     channel_final=median(channel_store_sec);
-    %     hold on
-    %     t=((1:length(channel_final))-1)/Fs2;
-    %     plot(t,20*log10(channel_final'),'linewidth',2)
+        t=((1:length(Y_s))-1)/Fs2;
+%         figure
+        plot(t,10*log10(Y_s'))
+        ylim([-35 0])
+        channel_final=mean(sqrt(Y_s));
+        hold on
+        t=((1:length(channel_final))-1)/Fs2;
+        plot(t,20*log10(channel_final'),'color',[0 0.5 0.3],'linewidth',3)
     
-    fittedresults{Fci}.channel_meadian=median(channel_store_sec);
-    
+    fittedresults{Fci}.channel_mean=mean(channel_store_sec);
+    fittedresults{Fci}.channel_median=median(channel_store_sec);
     %     [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
     [T25_e_decaycurve(Fci) EDT_e(Fci) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_final,Fs2,25);
 
+    fittedresults{Fci}.T25_e_decaycurve=T25_e_decaycurve(Fci);
     fittedresults{Fci}.T25_est = nanmean(T25_sec);
     fittedresults{Fci}.T25_cl = nanstd(T25_sec)/sqrt(sum(isnan(T25_sec)==0))*1.96;
     fittedresults{Fci}.T25_N=sum(isnan(T25_sec)==0);
