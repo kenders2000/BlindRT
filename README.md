@@ -10,10 +10,10 @@ This program can compute the reverberation time from passivley recieved signals,
 Description of algorithm
 --------------
 The algorithm is written in matlab, it contains a number of sub-functions, the following list describes the operation of the algorithm, for more details please consult the references at the end of this read-me.
-  - Choose wav file, this needs to be a recording of speech or music,
+ -Choose wav file, this needs to be a recording of speech or music,
   for speech at least an hour, for music perhaps longer
- -  read in section of wav file, and filter into octave band
- -     Maximum likelihood estimation of decays; 
+ -Read in section of wav file, and filter into octave band
+ -Maximum likelihood estimation of decays; 
          -- Polyfit algorithm, this uses 0.5 s windows on the envelope of
           the signal, fitting a 1st order polynomial to the log
           envelope, the gradient of each fit is extracted, windows are
@@ -36,7 +36,7 @@ The algorithm is written in matlab, it contains a number of sub-functions, the f
          is constrained minimisation.
          --   Once all ML parameters are computed, the dynamic range of
          each decayphase is computed from the ML decay curve.
-  -     Post-process results, for every octave band, a framework for
+  -Post-process results, for every octave band, a framework for
   estimating the RT is as follows, find the length of signal required to
   ensure that at least 40 decay phases with at least 25 dB of dynamic
   range are present, (this is just a rule of thumb), I found for speech
