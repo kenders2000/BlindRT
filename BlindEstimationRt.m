@@ -1,5 +1,46 @@
-% Blind estimation of reverberation time, paul kendrick, University of
-% Salford, Acoustics research centre
+% Blind estimation of reverberation time, Paul kendrick, University of
+% Salford, Acoustics research centre, p.kendrick@salford.ac.uk
+% This program can compute the reverberation time from passivley recieved
+% signals, such as speech and music. The operation is as follows:
+%   Description of algorithm
+%   1) Choose wav file, this needs to be a recording of speech or music,
+%   for speech at least an hour, for music perhaps longer
+%   2)  read in section of wav file, and filter into octave band
+%   3)     Maximum likehood estimation of decays; 
+%          a) Polyfit algorithm, this uses 0.5 s windows on the envelope of
+%           the signal, fitting a 1st order poly nomial to the log
+%           envelope, the gradient of each fit is extracted, windows are
+%           moved along, using a very high overlap (0.002s), and regions
+%           which are continuously decaying identified from the gradient
+%           (gradient equivlent for RT==100s used as maximum gradient) -
+%           these decay phases are then fine tuned (start maximum, end min
+%           of LP filtered envelope)
+%          b) Maximum Likelihood fit to every decay phase, a model of sound
+%          decay in a room is where the envelope, alpha*a.^I+(1-alpha)*b.^I,
+%          modulates gaussian white noise.  This is a
+%          model of non-diffuse sound decay, utilising two exponential
+%          decays, with decay rates determined by a and b, added together
+%          using a convex sum where the balence between the two is
+%          controlled by the parameter alpha, all parmaters are constrained
+%          between 0 & 1. The fit proceedure first computes the likelihood
+%          over a coarse grid of values for a and b (alpha optimsed for
+%          each grid point), then performs a fine search using the corase
+%          result as a starting point, the function fmincon is used.  This
+%          is contrained minimisation.
+%          c)   Once all ML parameters are computed, the dynamic range of
+%          each decayphase is computed from the ML decay curve.
+%   4)     Postprocess results, for every octave band, a framework for
+%   estimationg the RT is as follows, find the length of signal required to
+%   ensure that at least 40 decay phases with at least 25 dB of dynamic
+%   range are present, (this is just a rule of thumb), I found for speech
+%   3-5 (segLen is this parameter - in secs) mins works.  In each 3-5 min 
+%  section, compute the RT from  the 
+%  decay phases with at least 25dB dynamic range, select the minimum RT as
+%  the estimate for that section.  Compute the minimum RT for multiple
+%  sections.  Average over all sections provides the blind RT estimate, the
+%  95% CL from the standard error indicates the confidence in that result.
+%   
+
 clear all
 close all
 %Octave bands
@@ -10,11 +51,12 @@ Fs3=[3000 3000 3000 3000 3000 6000 12000 24000];
 %%  this section loops over a wav file and extracts all decay phases,
 %  fits a Maximum likelihood model to each decay phase, computes the
 %  dynmaic range, and collects all the results for the following wav file
-filename=sprintf('originals/DS_English_E8_L1.WAV');
+filename=sprintf('originals/DS_Science_S6_L1.WAV');
 SIZ=wavread(filename,'size');
 
-for Fci=5%:8
-    % clear Maximum likelihood parameter
+for Fci=1:8
+    
+    % clear Maximum likelihood parameters
     a_store1=[];
     b_store1=[];
     alpha_store1=[];
@@ -77,6 +119,7 @@ end
 % choose Length of segments
 segLen=3*60;  %% three mins (in secs)
 
+clear fittedresults
 for Fci=1:8
     
     Fs2=Fs3(Fci);
@@ -97,9 +140,9 @@ for Fci=1:8
     % find all decay phases with DR better than 25dB
     III_=find(DR1<-25);
     %%      
-    clear T25_sec
+    clear T25_sec NdecayPhases Y_s
     channel_store_sec=zeros(Nseg,4*Fs3(Fci));
-        channel_fil=zeros(5*Fs2,1);
+    channel_fil=zeros(5*Fs2,1);
     for segi=1:Nseg
         
         posN_from=(segi-1)*segLenN+1;
@@ -139,41 +182,51 @@ for Fci=1:8
         c = pinv(A)*sig;
         line=(channel_sec_log(I2))+c(2)*((1:length(channel_sec))-I2);
         line=10.^(line(:)/20);
-%       plot(20*log10(line))
-%       plot(channel_sec_log,'r')
-%       hold on
-%       winL=500;
-%       channel_sec2(I2:end)=line(I2:end)';
-%       plot(20*log10(channel_sec2),'k')
-%       channel_sec=channel_sec2;
+        %       plot(20*log10(line))
+        %       plot(channel_sec_log,'r')
+        %       hold on
+        %       winL=500;
+        %       channel_sec2(I2:end)=line(I2:end)';
+        %       plot(20*log10(channel_sec2),'k')
+        %       channel_sec=channel_sec2;
 
         [T25_sec(segi) EDT_sec(Fci,segi) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_sec3,Fs2,25);
         channel_store_sec(segi,1:length(channel_sec3))=channel_sec3;
-        Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
-        Y=Y/max(abs(Y));
-        Y_s(segi,1:length(Y))=Y;
-
+        %         Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
+        %         Y=Y/max(abs(Y));
+        %         Y_s(segi,1:length(Y))=Y;
+        NdecayPhases(segi)=length(III);
     end
-    T25_sec_cell{Fci}=T25_sec;
-    %%
-    t=((1:length(Y_s))-1)/Fs2;
-%     figure
-    plot(t,10*log10(Y_s'))
-    ylim([-35 0])
-    channel_final=median(channel_store_sec);
-    hold on
-        t=((1:length(channel_final))-1)/Fs2;
-
-    plot(t,20*log10(channel_final'),'linewidth',2)
-    impulse_est_cell{Fci}=median(channel_store_sec);
-
     
-%     [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
-%      [channel_final]=optimum_model_function_2(a_store1(III(:)),b_store1(III(:)),alpha_store1(III(:)),Fs2,DR1(III(:)),channel_fil,1)
+    % Collect together results
+    
+    fittedresults{Fci}.DR1=DR1;
+    fittedresults{Fci}.a_store1=a_store1;
+    fittedresults{Fci}.b_store1=b_store1;
+    fittedresults{Fci}.alpha_store1=alpha_store1;
+    fittedresults{Fci}.len_store1=len_store1;
+    fittedresults{Fci}.pos_store1=pos_store1;% pos_store1_cell{Fci};
+    fittedresults{Fci}.T25_sec=T25_sec;
+    fittedresults{Fci}.NdecayPhases=NdecayPhases;
+    
+    %     t=((1:length(Y_s))-1)/Fs2;
+    %     figure
+    %     plot(t,10*log10(Y_s'))
+    %     ylim([-35 0])
+    %     channel_final=median(channel_store_sec);
+    %     hold on
+    %     t=((1:length(channel_final))-1)/Fs2;
+    %     plot(t,20*log10(channel_final'),'linewidth',2)
+    
+    fittedresults{Fci}.channel_meadian=median(channel_store_sec);
+    
+    %     [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
     [T25_e_decaycurve(Fci) EDT_e(Fci) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_final,Fs2,25);
 
-   T25_e(Fci) = mean(T25_sec(:));
-   T25_cl(Fci) = std(T25_sec(:))/sqrt(length(T25_sec))*1.96;
-   T25_N(Fci)=length(T25_sec);
-   std(T25_sec(:))/sqrt(length(T25_sec))*1.96;
+    fittedresults{Fci}.T25_est = mean(T25_sec_cell{Fci});
+    fittedresults{Fci}.T25_cl = std(T25_sec_cell{Fci})/sqrt(length(T25_sec_cell{Fci}))*1.96;
+    fittedresults{Fci}.T25_N=length(T25_sec_cell{Fci});
+   
+    [fittedresults{Fci}.T25_est fittedresults{Fci}.T25_cl]
+   
 end
