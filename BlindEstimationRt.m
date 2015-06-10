@@ -120,7 +120,7 @@ end
 segLen=3*60;  %% three mins (in secs)
 
 clear fittedresults
-for Fci=1:8
+for Fci=1:5
     
     Fs2=Fs3(Fci);
     segLenN=segLen*Fs2;
@@ -131,7 +131,7 @@ for Fci=1:8
     alpha_store1=alpha_store1_cel{Fci};
     len_store1=len_store1_cel{Fci};
     pos_store1=start_end1_cel{Fci};% pos_store1_cell{Fci};
-    
+    start_end1=pos_store1;
     lenFile=max(max(start_end1));
     lenFileS=max(max(start_end1))/Fs2;
     
@@ -152,8 +152,8 @@ for Fci=1:8
         end
         
         III=III_(start_end1(1,III_)>=posN_from &  start_end1(2,III_)<posN_to);
-
         
+        if length(III>1)
         [channel_sec]=optimum_model_function_2(a_store1(III),b_store1(III),alpha_store1(III),Fs2,DR1(III),channel_fil,0);
         channel_sec3=channel_sec;
         %     Find -30dB point
@@ -192,6 +192,11 @@ for Fci=1:8
 
         [T25_sec(segi) EDT_sec(Fci,segi) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_sec3,Fs2,25);
         channel_store_sec(segi,1:length(channel_sec3))=channel_sec3;
+        else
+            channel_store_sec(segi,1:length(channel_sec3))=channel_sec3.*nan;
+            T25_sec(segi)=nan;
+        end
+        
         %         Y(length(channel_sec3):-1:1) = cumsum(channel_sec3(length(channel_sec3):-1:1).^2);
         %         Y=Y/max(abs(Y));
         %         Y_s(segi,1:length(Y))=Y;
@@ -223,9 +228,9 @@ for Fci=1:8
     %     [T25_boot(Fci,:) EDT_boot(Fci,:) C80_boot centre_boot Y_logs_cell{Fci} Y_log_cell{Fci}]=boot_strapping_function(channel_store_sec,Fs2);
     [T25_e_decaycurve(Fci) EDT_e(Fci) C80 C50 centre D ]=Room_acoustic_params_centre_ldr(channel_final,Fs2,25);
 
-    fittedresults{Fci}.T25_est = mean(T25_sec_cell{Fci});
-    fittedresults{Fci}.T25_cl = std(T25_sec_cell{Fci})/sqrt(length(T25_sec_cell{Fci}))*1.96;
-    fittedresults{Fci}.T25_N=length(T25_sec_cell{Fci});
+    fittedresults{Fci}.T25_est = nanmean(T25_sec);
+    fittedresults{Fci}.T25_cl = nanstd(T25_sec)/sqrt(sum(isnan(T25_sec)==0))*1.96;
+    fittedresults{Fci}.T25_N=sum(isnan(T25_sec)==0);
    
     [fittedresults{Fci}.T25_est fittedresults{Fci}.T25_cl]
    
