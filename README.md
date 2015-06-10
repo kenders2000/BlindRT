@@ -9,35 +9,35 @@ This program can compute the reverberation time from passivley recieved signals,
 
 Description of algorithm
 --------------
-The algorithm is written in matlab, it contains a number of subfunctions, the following list describes the operation of the algorithm, for more details please consult the references at the end of this readme.
+The algorithm is written in matlab, it contains a number of sub-functions, the following list describes the operation of the algorithm, for more details please consult the references at the end of this read-me.
   - Choose wav file, this needs to be a recording of speech or music,
   for speech at least an hour, for music perhaps longer
  -  read in section of wav file, and filter into octave band
- -     Maximum likehood estimation of decays; 
+ -     Maximum likelihood estimation of decays; 
          -- Polyfit algorithm, this uses 0.5 s windows on the envelope of
-          the signal, fitting a 1st order poly nomial to the log
+          the signal, fitting a 1st order polynomial to the log
           envelope, the gradient of each fit is extracted, windows are
           moved along, using a very high overlap (0.002s), and regions
           which are continuously decaying identified from the gradient
-          (gradient equivlent for RT==100s used as maximum gradient) -
+          (gradient equivalent for RT==100s used as maximum gradient) -
           these decay phases are then fine tuned (start maximum, end min
           of LP filtered envelope)
          -- Maximum Likelihood fit to every decay phase, a model of sound
          decay in a room is where the envelope, alpha*a.^I+(1-alpha)*b.^I,
-         modulates gaussian white noise.  This is a
+         modulates Gaussian white noise.  This is a
          model of non-diffuse sound decay, utilising two exponential
          decays, with decay rates determined by a and b, added together
-         using a convex sum where the balence between the two is
-         controlled by the parameter alpha, all parmaters are constrained
-         between 0 & 1. The fit proceedure first computes the likelihood
-         over a coarse grid of values for a and b (alpha optimsed for
-         each grid point), then performs a fine search using the corase
+         using a convex sum where the balance between the two is
+         controlled by the parameter alpha, all parameters are constrained
+         between 0 & 1. The fit procedure first computes the likelihood
+         over a coarse grid of values for a and b (alpha optimised for
+         each grid point), then performs a fine search using the coarse
          result as a starting point, the function fmincon is used.  This
-         is contrained minimisation.
+         is constrained minimisation.
          --   Once all ML parameters are computed, the dynamic range of
          each decayphase is computed from the ML decay curve.
-  -     Postprocess results, for every octave band, a framework for
-  estimationg the RT is as follows, find the length of signal required to
+  -     Post-process results, for every octave band, a framework for
+  estimating the RT is as follows, find the length of signal required to
   ensure that at least 40 decay phases with at least 25 dB of dynamic
   range are present, (this is just a rule of thumb), I found for speech
   3-5 (segLen is this parameter - in secs) mins works.  In each 3-5 min 

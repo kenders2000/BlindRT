@@ -54,7 +54,7 @@ Fs3=[3000 3000 3000 3000 3000 6000 12000 24000];
 filename=sprintf('originals/DS_Science_S6_L1.WAV');
 SIZ=wavread(filename,'size');
 
-for Fci=6:8
+for Fci=1:8
     
     % clear Maximum likelihood parameters
     a_store1=[];
@@ -120,7 +120,7 @@ end
 segLen=3*60;  %% three mins (in secs)
 
 clear fittedresults
-for Fci=6
+for Fci=1:8
     
     Fs2=Fs3(Fci);
     segLenN=segLen*Fs2;

@@ -45,6 +45,7 @@ si_no_picks=size(start_end);
 no_picks=si_no_picks(2);
 env2=env;%env_detect2_windowed(y,Fs,80,y,40);
 env=abs(y);
+
 %%%%%%%%%%%%%Stage 2 perform ML of segements
 % te=sprintf('Please wait...performing on MLE Section %g of %g',section,Sections)
 % h = waitbar(0,te);
