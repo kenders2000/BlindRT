@@ -10,11 +10,11 @@ This program can compute the reverberation time from passivley recieved signals,
 Description of algorithm
 --------------
 The algorithm is written in matlab, it contains a number of sub-functions, the following list describes the operation of the algorithm, for more details please consult the references at the end of this read-me.
- - Choose wav file, this needs to be a recording of speech or music,
+- Choose wav file, this needs to be a recording of speech or music,
   for speech at least an hour, for music perhaps longer
- - Read in section of wav file, and filter into octave band
- - Maximum likelihood estimation of decays;
- -- Polyfit algorithm, this uses 0.5 s windows on the envelope of
+- Read in section of wav file, and filter into octave band
+- Maximum likelihood estimation of decays;
+ - Polyfit algorithm, this uses 0.5 s windows on the envelope of
           the signal, fitting a 1st order polynomial to the log
           envelope, the gradient of each fit is extracted, windows are
           moved along, using a very high overlap (0.002s), and regions
@@ -22,7 +22,7 @@ The algorithm is written in matlab, it contains a number of sub-functions, the f
           (gradient equivalent for RT==100s used as maximum gradient) -
           these decay phases are then fine tuned (start maximum, end min
           of LP filtered envelope)
--- Maximum Likelihood fit to every decay phase, a model of sound
+ - Maximum Likelihood fit to every decay phase, a model of sound
          decay in a room is where the envelope, alpha*a.^I+(1-alpha)*b.^I,
          modulates Gaussian white noise.  This is a
          model of non-diffuse sound decay, utilising two exponential
@@ -34,9 +34,9 @@ The algorithm is written in matlab, it contains a number of sub-functions, the f
          each grid point), then performs a fine search using the coarse
          result as a starting point, the function fmincon is used.  This
          is constrained minimisation.
--- Once all ML parameters are computed, the dynamic range of
+ - Once all ML parameters are computed, the dynamic range of
 each decayphase is computed from the ML decay curve.
-  - Post-process results, for every octave band, a framework for
+- Post-process results, for every octave band, a framework for
   estimating the RT is as follows, find the length of signal required to
   ensure that at least 40 decay phases with at least 25 dB of dynamic
   range are present, (this is just a rule of thumb), I found for speech
