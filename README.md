@@ -49,6 +49,6 @@ each decayphase is computed from the ML decay curve.
  
  References
  ------
--*Paul Kendrick, Nicola Shiers, Robert Conetta, Trevor J. Cox, Bridget M. Shield, Charlie Mydlarz*, Blind estimation of reverberation time in classrooms and hospital wards, Applied Acoustics, Volume 73, Issue 8, August 2012, Pages 770-780, ISSN 0003-682X, http://dx.doi.org/10.1016/j.apacoust.2012.02.010.
--*P Kendrick, TJ Cox, FF Li, Y Zhang, JA Chambers*, Monaural room acoustic parameters from music and speech - The Journal of the Acoustical Society of America, 2008
--*P Kendrick, FF Li, TJ Cox, Y Zhang, JA Chambers*, Blind estimation of reverberation parameters for non-diffuse rooms, Acta Acustica united with Acustica, 2007
+- *Paul Kendrick, Nicola Shiers, Robert Conetta, Trevor J. Cox, Bridget M. Shield, Charlie Mydlarz*, Blind estimation of reverberation time in classrooms and hospital wards, Applied Acoustics, Volume 73, Issue 8, August 2012, Pages 770-780, ISSN 0003-682X, http://dx.doi.org/10.1016/j.apacoust.2012.02.010.
+- *P Kendrick, TJ Cox, FF Li, Y Zhang, JA Chambers*, Monaural room acoustic parameters from music and speech - The Journal of the Acoustical Society of America, 2008
+- *P Kendrick, FF Li, TJ Cox, Y Zhang, JA Chambers*, Blind estimation of reverberation parameters for non-diffuse rooms, Acta Acustica united with Acustica, 2007
